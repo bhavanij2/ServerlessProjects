@@ -1,0 +1,57 @@
+service: obp-sample-sls-two-serv-apigateway
+# app and org for use with dashboard.serverless.com
+#app: your-app-name
+#org: your-org-name
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+plugins:
+    - serverless-apigateway-plugin
+
+custom:
+    apigateway:
+        responses:
+            - response:
+                type: ACCESS_DENIED
+                headers: {"gatewayresponse.header.Access-Control-Allow-Origin":"'*'"}
+                bodyMappingTemplate: { "contentType": "application/json" , "content": '{"message":$context.authorizer.customErrorMessage}'}
+                statusCode: 403
+  
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: ${opt:stage, env:STAGE, 'dev'}
+  region: ${opt:region, env:REGION, 'us-east-1'}
+  stackName: obp-sample-sls-two-apigateway
+  aws_account: ${opt:aws_account, env:AWS_ACCOUNT}
+  deploymentBucket: obp-${self:provider.region}-${self:provider.aws_account}
+#   role: arn:aws:iam::${self:provider.aws_account}:role/${opt:lambda_role, env:LAMBDA_ROLE}
+#   stackTags:
+#     mon:owner: ${opt:owner, env:OWNER}
+#     mon:cost-center: ${opt:cost-center, env:COST_CENTER}
+#     mon:project: ${opt:project, env:PROJECT}
+#     mon:env: ${opt:env, env:ENV}
+#     mon:regulated: ${opt:regulated, env:REGULATED}
+#     mon:data-classification: ${opt:data-classification, env:DATA_CLASSIFICATION}
+  profile: 488499787904/standard-user 
+
+resources:
+  Resources:
+    ApiGatewayRestApi:
+      Type: 'AWS::ApiGateway::RestApi'
+      Properties:
+        Name: obp-sample-sls-two-api
+  Outputs:
+        ApiGWRestApiId:
+          Value:
+            Ref: ApiGatewayRestApi
+          Export:
+            Name: obp-sample-sls-two-api-restApiId
+        ApiGWRootResourceId:
+          Value:
+            Fn::GetAtt:
+              - ApiGatewayRestApi
+              - RootResourceId
+          Export:
+            Name: obp-sample-sls-two-api-rootResourceId
